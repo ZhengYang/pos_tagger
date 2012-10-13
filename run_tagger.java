@@ -107,7 +107,7 @@ class run_tagger {
                     TMatrix.put( currTag, hm );
                 }
                 // LINE_48 - LINE_92: emission matrix
-                else {
+                else if (lineCounter >= 48 && lineCounter <= 92){
                     int tagListIndex = lineCounter - 48;
                     String currTag = tagList.get(tagListIndex);
                     
@@ -128,14 +128,16 @@ class run_tagger {
             // calculate probabilities from counts
             // transition probabilities
             for (int i = 0; i < tagArray.length; i++) {
+                // skip </s>
+                if (tagArray[i].equals("</s>")) continue;
+                
                 // first loop for calculating the total count
                 int total = 0;
                 for (int j = 0; j < tagArray.length; j++)
-                {
+                {   
                     Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
                     total += ( (count == null) ? 0 : count.intValue() );
                 }
-                
                 // second loop for calculating probabilities
                 Map<String, Double> hm = new HashMap<String, Double>();
                 for (int j = 0; j < tagArray.length; j++)
@@ -149,6 +151,9 @@ class run_tagger {
             
             // emission probilities
             for (int i = 0; i < tagArray.length; i++) {
+                // skip </s>
+                if (tagArray[i].equals("</s>")) continue;
+                
                 // first loop for calculating the total count
                 int total = 0;
                 for (int j = 0; j < wordArray.length; j++)

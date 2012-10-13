@@ -93,7 +93,6 @@ class build_tagger {
                     // handle last token
                     if (i == tokens.length - 1) {
                         tag = "</s>";
-                        tagSet.add(tag);
                         if (TMatrix.containsKey(prevTag)) {
                             if (TMatrix.get(prevTag).containsKey(tag)) {
                                 TMatrix.get(prevTag).put( tag, new Integer(TMatrix.get(prevTag).get(tag).intValue() + 1) );
@@ -132,7 +131,7 @@ class build_tagger {
             {
                 tagLine += tagArray[i] + " ";
             }
-            modelBw.write(tagLine.trim());
+            modelBw.write(tagLine.trim() + " </s>");
             modelBw.newLine();
             
             // LINE_2 of model file is word list
