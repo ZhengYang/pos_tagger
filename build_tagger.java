@@ -28,9 +28,9 @@ class build_tagger {
         // counts
         Map<String, Map<String, Integer>> TMatrix = new HashMap<String, Map<String, Integer>>();
         Map<String, Map<String, Integer>> EMatrix = new HashMap<String, Map<String, Integer>>();
-        // probability
-        Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
-        Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
+        // probability, i/o time consuming
+        //Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
+        //Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
         
         // train
         try {
@@ -113,6 +113,7 @@ class build_tagger {
                 }
             }
             trainBr.close();
+            
             
             // output in-memory stats to <model_file>
             // arrange tag and word lists
