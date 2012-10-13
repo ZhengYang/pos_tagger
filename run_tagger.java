@@ -115,6 +115,47 @@ class run_tagger {
                     tMatrix.put( currTag, hm );
                 }
             }
+            
+            // calculate probabilities from counts
+            // transition probabilities
+            for (int i = 0; i < tagArray.length; i++) {
+                // first loop for calculating the total count
+                int total = 0;
+                for (int j = 0; j < tagArray.length; j++)
+                {
+                    Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
+                    total += (count == null) ? 0 : count.intValue();
+                }
+                // second loop for calculating probabilities
+                Map<String, Double> hm = new HashMap<String, Double>();
+                for (int j = 0; j < tagArray.length; j++)
+                {
+                    Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
+                    double prob = ( (count == null) ? 0 : count.intValue() ) / (double) total;
+                    hm.put( tagArray[j], new Double(prob) );
+                }
+                tMatrix.put( tagArray[i], hm );
+            }
+            // emission probilities
+            for (int i = 0; i < tagArray.length; i++) {
+                // first loop for calculating the total count
+                int total = 0;
+                for (int j = 0; j < wordArray.length; j++)
+                {
+                    Integer count = EMatrix.get(tagArray[i]).get(wordArray[j]);
+                    total += (count == null) ? 0 : count.intValue();
+                }
+                // second loop for calculating probabilities
+                Map<String, Double> hm = new HashMap<String, Double>();
+                for (int j = 0; j < wordArray.length; j++)
+                {
+                    Integer count = EMatrix.get(tagArray[i]).get(wordArray[j]);
+                    double prob = ( (count == null) ? 0 : count.intValue() ) / (double) total;
+                    hm.put( wordArray[j], new Double(prob) );
+                }
+                eMatrix.put( tagArray[i], hm );
+            }
+            
             HMM hmm = new HMM();
             hmm.tagSet = tagSet;
             hmm.wordSet = wordSet;
