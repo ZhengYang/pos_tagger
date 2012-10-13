@@ -72,19 +72,47 @@ class run_tagger {
             while((modelLine = modelBr.readLine()) != null) {
                 // LINE_1: tagList
                 if (lineCounter == 1) {
-                    
+                    // break each line into an array of "tag" tokens
+                    String[] tags = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < tags.length; i++) {
+                        tagList.add(tags[i]);
+                        tagSet.add(tags[i]);
+                    }
                 }
                 // LINE_2: wordList
                 else if (lineCounter == 2) {
-                    
+                    // break each line into an array of "word" tokens
+                    String[] words = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < words.length; i++) {
+                        wordList.add(words[i]);
+                        wordSet.add(words[i]);
+                    }
                 }
                 // LINE_3 - LINE47: transition matrix
                 else if (lineCounter >= 3 && lineCounter <= 47) {
+                    int tagListIndex = lineCounter - 3;
+                    String currTag = tagList.get(tagListIndex);
                     
+                    Map<String, Integer> hm = new HashMap<String, Integer>();
+                    String[] counts = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < counts.length; i++) {
+                        String currToTag = tagList.get(i);
+                        hm.put( currToTag, new Integer(counts[i]));
+                    }
+                    tMatrix.put( currTag, hm );
                 }
                 // LINE_48 - LINE_92: emission matrix
                 else {
+                    int tagListIndex = lineCounter - 48;
+                    String currTag = tagList.get(tagListIndex);
                     
+                    Map<String, Integer> hm = new HashMap<String, Integer>();
+                    String[] counts = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < counts.length; i++) {
+                        String currWord = wordList.get(i);
+                        hm.put( currWord, new Integer(counts[i]));
+                    }
+                    tMatrix.put( currTag, hm );
                 }
             }
             HMM hmm = new HMM();

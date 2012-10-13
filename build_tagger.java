@@ -34,7 +34,7 @@ class build_tagger {
             BufferedReader trainBr = new BufferedReader(trainReader);
             String currLine;
             while ((currLine = trainBr.readLine()) != null) {
-                // break each line into an array of "word/tage" tokens
+                // break each line into an array of "word/tag" tokens
                 String[] tokens = currLine.trim().split("\\s+");
                 // keep track of the previous tag for transition matrix
                 String prevTag = "<s>";
