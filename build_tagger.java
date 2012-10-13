@@ -93,6 +93,7 @@ class build_tagger {
                     // handle last token
                     if (i == tokens.length - 1) {
                         tag = "</s>";
+                        tagSet.add(tag);
                         if (TMatrix.containsKey(prevTag)) {
                             if (TMatrix.get(prevTag).containsKey(tag)) {
                                 TMatrix.get(prevTag).put( tag, new Integer(TMatrix.get(prevTag).get(tag).intValue() + 1) );
@@ -146,6 +147,9 @@ class build_tagger {
             // LINE_3 - LINE_47 (45 lines): transition matrix
             for (int i = 0; i < tagArray.length; i++)
             {
+                // skip </s>
+                if (tagArray[i].equals("</s>")) continue;
+                
                 String tLine = "";
                 for (int j = 0; j < tagArray.length; j++)
                 {
@@ -160,6 +164,9 @@ class build_tagger {
             // LINE_48 - LINE_92 (45 lines): emission matrix
             for (int i = 0; i < tagArray.length; i++)
             {
+                // skip </s>
+                if (tagArray[i].equals("</s>")) continue;
+                
                 String eLine = "";
                 for (int j = 0; j < wordArray.length; j++)
                 {

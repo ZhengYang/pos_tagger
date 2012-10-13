@@ -217,6 +217,7 @@ class run_tagger {
 	    // retrieve model paramenters
 	    String[] tagArray = hmm.tagArray;
 	    String[] wordArray = hmm.wordArray;
+	    Set<String> wordSet = hmm.wordSet;
 	    Map<String, Map<String, Double>> tMatrix = hmm.tMatrix;
         Map<String, Map<String, Double>> eMatrix = hmm.eMatrix;
         
@@ -231,10 +232,19 @@ class run_tagger {
                 TrellisNode tNode = new TrellisNode();
                 tNode.tag = tag;
                 tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
-                tNode.prob = (i == 0) ? eMatrix.get(tag).get(words[i]).doubleValue() : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag).doubleValue() * eMatrix.get(tag).get(words[i]).doubleValue();
+                // IMPORTANT: handle unknown word
+                double eProb;
+                if (!wordSet.contains(words[i])) {
+                    eProb = 1;
+                }
+                else {
+                    eProb = eMatrix.get(tag).get(words[i]).doubleValue();
+                }
+                tNode.prob = (i == 0) ? eProb : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag).doubleValue() * eProb;
                 col.add(tNode);
             }
             trellis.add(col);
+            
             // reset max terminal node is not the last  column
             if (i == words.length - 1) {
                 maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i - 1), "</s>", tMatrix);
@@ -264,6 +274,7 @@ class run_tagger {
 	//////////////////////////////////////////////////////////////////////
 	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Double>> tMatrix) {
 	    TrellisNode maxNode = null;
+	    System.out.println("xixi3");
 	    for (TrellisNode node : col) {
             if (maxNode == null)
                 maxNode = node;
@@ -273,6 +284,7 @@ class run_tagger {
                     maxNode = node;
             }
 	    }
+	    
 	    return maxNode;
 	}
 }
