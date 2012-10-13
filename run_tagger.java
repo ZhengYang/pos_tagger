@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Stack;
 
 class run_tagger {
+    // quick ref: java run_tagger sents.test model_file sents.out
     
     /////////////////////////////////////
     // nested class for viterbi algorithm
@@ -42,7 +43,6 @@ class run_tagger {
     
     
 	public static void main(String args[]) {
-	    // quick ref: java run_tagger sents.test model_file sents.out
 	    if (args.length != 3) {
 	        System.out.println("error: Wrong number of arguments.");
 	        System.out.println("usage: java run_tagger <sents.test> <model_file> <sents.out>");
@@ -71,7 +71,7 @@ class run_tagger {
             Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
             Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
             
-            String modelLine = "";
+            String modelLine = null;
             int lineCounter = 1;
             
             while((modelLine = modelBr.readLine()) != null) {
@@ -119,6 +119,7 @@ class run_tagger {
                     }
                     EMatrix.put( currTag, hm );
                 }
+                lineCounter++;
             }
             
             String[] tagArray = tagList.toArray(new String[0]);
@@ -132,8 +133,9 @@ class run_tagger {
                 for (int j = 0; j < tagArray.length; j++)
                 {
                     Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
-                    total += (count == null) ? 0 : count.intValue();
+                    total += ( (count == null) ? 0 : count.intValue() );
                 }
+                
                 // second loop for calculating probabilities
                 Map<String, Double> hm = new HashMap<String, Double>();
                 for (int j = 0; j < tagArray.length; j++)
@@ -144,6 +146,7 @@ class run_tagger {
                 }
                 tMatrix.put( tagArray[i], hm );
             }
+            
             // emission probilities
             for (int i = 0; i < tagArray.length; i++) {
                 // first loop for calculating the total count
@@ -173,7 +176,6 @@ class run_tagger {
             hmm.eMatrix = eMatrix;
             // close model buffer
             modelBr.close();
-            
             
              // read test input            
             FileReader testReader = new FileReader(testFile);
@@ -229,7 +231,7 @@ class run_tagger {
                 TrellisNode tNode = new TrellisNode();
                 tNode.tag = tag;
                 tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
-                tNode.prob = (i == 0) ? eMatrix.get(tag).get(words[i]) : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag) * eMatrix.get(tag).get(words[i]);
+                tNode.prob = (i == 0) ? eMatrix.get(tag).get(words[i]).doubleValue() : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag).doubleValue() * eMatrix.get(tag).get(words[i]).doubleValue();
                 col.add(tNode);
             }
             trellis.add(col);
@@ -267,7 +269,7 @@ class run_tagger {
                 maxNode = node;
             else {
                 // assume equal probability won't update max
-                if (maxNode.prob * tMatrix.get(maxNode.tag).get(transToTag) < node.prob * tMatrix.get(node.tag).get(transToTag))
+                if (maxNode.prob * tMatrix.get(maxNode.tag).get(transToTag).doubleValue() < node.prob * tMatrix.get(node.tag).get(transToTag).doubleValue())
                     maxNode = node;
             }
 	    }
