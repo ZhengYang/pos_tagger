@@ -1,6 +1,7 @@
 *.class
 .DS_Store
 bin-*
+sents.out
 
 # Package Files #
 *.jar
