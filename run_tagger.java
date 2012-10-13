@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Stack;
 
 class run_tagger {
@@ -29,6 +31,8 @@ class run_tagger {
 	///////////////////////////////////////
 	
 	static class HMM {
+	    public Set<String> tagSet;
+        public Set<String> wordSet;
 	    public ArrayList<String> tagList;
 	    public ArrayList<String> wordList;
 	    public Map<String, Map<String, Integer>> tMatrix;
@@ -54,8 +58,42 @@ class run_tagger {
             // load HMM
             FileReader modelReader = new FileReader(modelFile);
             BufferedReader modelBr = new BufferedReader(modelReader);
-            HMM hmm = new HMM();
             
+            Set<String> tagSet = new HashSet<String>();
+            Set<String> wordSet = new HashSet<String>();
+            ArrayList<String> tagList = new ArrayList<String>();
+    	    ArrayList<String> wordList = new ArrayList<String>();
+    	    Map<String, Map<String, Integer>> tMatrix = new HashMap<String, Map<String, Integer>>();
+            Map<String, Map<String, Integer>> eMatrix = new HashMap<String, Map<String, Integer>>() ;
+            
+            String modelLine = "";
+            int lineCounter = 1;
+            
+            while((modelLine = modelBr.readLine()) != null) {
+                // LINE_1: tagList
+                if (lineCounter == 1) {
+                    
+                }
+                // LINE_2: wordList
+                else if (lineCounter == 2) {
+                    
+                }
+                // LINE_3 - LINE47: transition matrix
+                else if (lineCounter >= 3 && lineCounter <= 47) {
+                    
+                }
+                // LINE_48 - LINE_92: emission matrix
+                else {
+                    
+                }
+            }
+            HMM hmm = new HMM();
+            hmm.tagSet = tagSet;
+            hmm.wordSet = wordSet;
+            hmm.tagList = tagList;
+            hmm.wordList = wordList;
+            hmm.tMatrix = tMatrix;
+            hmm.eMatrix = eMatrix;
             // close model buffer
             modelBr.close();
             
@@ -100,8 +138,8 @@ class run_tagger {
 	    // retrieve model paramenters
 	    ArrayList<String> tagList = hmm.tagList;
 	    ArrayList<String> wordList = hmm.wordList;
-	    Map<String, Map<String, Integer>> TMatrix = hmm.tMatrix;
-        Map<String, Map<String, Integer>> EMatrix = hmm.eMatrix;
+	    Map<String, Map<String, Integer>> tMatrix = hmm.tMatrix;
+        Map<String, Map<String, Integer>> eMatrix = hmm.eMatrix;
         
         // set up a trellis while calculating the forward probabilities
         ArrayList<ArrayList<TrellisNode>> trellis = new ArrayList<ArrayList<TrellisNode>>();
@@ -113,14 +151,14 @@ class run_tagger {
             for (String tag : tagList) {
                 TrellisNode tNode = new TrellisNode();
                 tNode.tag = tag;
-                tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, TMatrix);
-                tNode.prob = (i == 0) ? EMatrix.get(tag).get(words[i]) : tNode.backPtr.prob * TMatrix.get(tNode.backPtr.tag).get(tag) * EMatrix.get(tag).get(words[i]);
+                tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
+                tNode.prob = (i == 0) ? eMatrix.get(tag).get(words[i]) : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag) * eMatrix.get(tag).get(words[i]);
                 col.add(tNode);
             }
             trellis.add(col);
             // reset max terminal node is not the last  column
             if (i == words.length - 1) {
-                maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i - 1), "</s>", TMatrix);
+                maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i - 1), "</s>", tMatrix);
             }
         }
         
@@ -145,14 +183,14 @@ class run_tagger {
 	/////////////////////////////////////////////////////////////////////
 	// find the max node that will result in local max (for back tracing)
 	//////////////////////////////////////////////////////////////////////
-	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Integer>> TMatrix) {
+	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Integer>> tMatrix) {
 	    TrellisNode maxNode = null;
 	    for (TrellisNode node : col) {
             if (maxNode == null)
                 maxNode = node;
             else {
                 // assume equal probability won't update max
-                if (maxNode.prob * TMatrix.get(maxNode.tag).get(transToTag) < node.prob * TMatrix.get(node.tag).get(transToTag))
+                if (maxNode.prob * tMatrix.get(maxNode.tag).get(transToTag) < node.prob * tMatrix.get(node.tag).get(transToTag))
                     maxNode = node;
             }
 	    }
