@@ -3,8 +3,26 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 class run_tagger {
+    
+    // nested class for viterbi algorithm
+	static class TrellisNode {
+	    public String tag;
+	    public double prob;
+	    public TrellisNode backPtr;
+	}
+	
+	// nested class for Hidden Markov Model
+	static class HMM {
+	    public ArrayList<String> tagList;
+	    public ArrayList<String> wordList;
+	    public Map<String, Map<String, Integer>> tMatrix;
+        public Map<String, Map<String, Integer>> eMatrix;
+	}
+    
 	public static void main(String args[]) {
 	    if (args.length != 3) {
 	        System.out.println("error: Wrong number of arguments.");
@@ -16,36 +34,89 @@ class run_tagger {
         String modelFile = args[1];
         String outFile = args[2];
         
-        // read input
+        
         try {
-            FileWriter fostream = new FileWriter(outFile);
-            BufferedWriter out = new BufferedWriter(fostream);
-
-            FileInputStream fstream = new FileInputStream(testFile);
-            DataInputStream in = new DataInputStream(fstream);
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            // load HMM
+            FileInputStream modelStream = new FileInputStream(modelFile);
+            DataInputStream modelDataIn = new DataInputStream(modelStream);
+            BufferedReader modelBr = new BufferedReader(new InputStreamReader(modelDataIn));
+            HMM hmm = new HMM();
+            
+             // read input            
+            FileInputStream testStream = new FileInputStream(testFile);
+            DataInputStream testDataIn = new DataInputStream(testStream);
+            BufferedReader testBr = new BufferedReader(new InputStreamReader(testDataIn));
+            
+            // prepare output file
+            FileWriter foStream = new FileWriter(outFile);
+            BufferedWriter outBw = new BufferedWriter(foStream);
+            
+            // process input and output results from viterbi algorithm
             String currLine;
-            while ((currLine = br.readLine()) != null) {
+            while ((currLine = testBr.readLine()) != null) {
                 // break each line into an array of tokens
                 String[] tokens = currLine.trim().split("\\s+");
-                ArrayList<String> tags = Vite(tokens);
+                ArrayList<String> tags = Vite(tokens, hmm);
                 
                 // write to out file
                 String outputLine = "";
                 for (int i = 0; i < tokens.length; i++) {
-                    line += tokens[i] + "/" + tags.get(i);
+                    outputLine += tokens[i] + "/" + tags.get(i);
                 }
-                out.write(outputLine + "\n");
+                outBw.write(outputLine + "\n");
             }
-            in.close();
-            out.close();
+            
+            modelBr.close();
+            testBr.close();
+            outBw.close();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
         }
 	}
 	
-	public static ArrayList<String> Vite(String[] words) {
-	    ArrayList<String> tags = new ArrayList<String>();
-	    return tags;
+	// Implementaion of viterbi algorithm
+	public static ArrayList<String> Vite(String[] words, HMM hmm) {
+	    // retrieve model paramenters
+	    ArrayList<String> tagList = hmm.tagList;
+	    ArrayList<String> wordList = hmm.wordList;
+	    Map<String, Map<String, Integer>> TMatrix = hmm.tMatrix;
+        Map<String, Map<String, Integer>> EMatrix = hmm.eMatrix;
+        
+        // set up a trellis while calculating the forward probabilities
+        ArrayList<ArrayList<TrellisNode>> trellis = new ArrayList<ArrayList<TrellisNode>>();
+        // keep track the max probability for a column
+        TrellisNode maxNode = null;
+        for (int i = 0; i < words.length; i++) {
+            // set up a column in trellis
+            ArrayList<TrellisNode> col = new ArrayList<TrellisNode>();
+            for (String tag : tagList) {
+                TrellisNode tNode = new TrellisNode();
+                tNode.tag = tag;
+                tNode.prob = ;
+                tNode.backPtr = ;
+                words[i]
+                col.add(tag);
+            }
+            trellis.add(col);
+            // reset max node is not the last  column
+            if (i != words.length - 1) {
+                maxNode = null;
+            }
+        }
+        
+        // backtrace from max node
+        Stack<String> optimalPathStack = new Stack<String>();
+        TrellisNode currNode = maxNode;
+        while(currNode.backPtr != null) {
+            optimalPathStack.push(currNode.tag);
+            currNode = currNode.backPtr;
+        }
+        // pop stack to constrct the tag list in order
+        ArrayList<String> optimalPath = new ArrayList<String>();
+        while (!optimalPathStack.empty()) {
+            optimalPath.add(optimalPathStack.pop());
+        }
+	    
+	    return optimalPath;
 	}
 }
