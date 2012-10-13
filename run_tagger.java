@@ -62,9 +62,9 @@ class run_tagger {
                 // write to out file
                 String outputLine = "";
                 for (int i = 0; i < tokens.length; i++) {
-                    outputLine += tokens[i] + "/" + tags.get(i);
+                    outputLine += tokens[i] + "/" + tags.get(i) + " ";
                 }
-                outBw.write(outputLine + "\n");
+                outBw.write(outputLine.trim() + "\n");
             }
             
             modelBr.close();
