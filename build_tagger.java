@@ -25,8 +25,12 @@ class build_tagger {
         // init in-memory stats variables
         Set<String> tagSet = new HashSet<String>();
         Set<String> wordSet = new HashSet<String>();
+        // counts
         Map<String, Map<String, Integer>> TMatrix = new HashMap<String, Map<String, Integer>>();
         Map<String, Map<String, Integer>> EMatrix = new HashMap<String, Map<String, Integer>>();
+        // probability
+        Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
+        Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
         
         // train
         try {

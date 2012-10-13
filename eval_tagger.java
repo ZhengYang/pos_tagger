@@ -7,7 +7,7 @@ import java.util.Scanner;
 class eval_tagger {
 	public static void main(String args[]) {
         // carry out the cross validation
-        double avAcc = 0;
+        double totalAcc = 0;
         for (int i = 0; i < 10; i ++) {
             String trainFile = "bin-" + i + ".train";
             String devtFile = "sents.devt";
@@ -51,12 +51,12 @@ class eval_tagger {
                     }
                 }
                 double acc = correctCount / (double) totalCount;
-                avAcc += acc;
+                totalAcc += acc;
                 System.out.println("bin-" + i + " Acc = " + String.format("%.2f", acc * 100) + "%");
             } catch (Exception e) {
                 System.err.println("Error: " + e.getMessage());
             }
         }
-        System.out.println("Average Acc = " + String.format("%.2f", avAcc * 100) + "%");
+        System.out.println("Average Acc = " + String.format("%.2f", totalAcc / 10 * 100) + "%");
 	}
 }
