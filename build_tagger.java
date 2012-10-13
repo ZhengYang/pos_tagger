@@ -119,7 +119,8 @@ class build_tagger {
             
             FileWriter modelWriter = new FileWriter(modelFile);
             BufferedWriter modelBw = new BufferedWriter(modelWriter);
-            // 1st line of model file is tag list
+            
+            // LINE_1 of model file is tag list
             String tagLine = "";
             for (int i = 0; i < tagArray.length; i++)
             {
@@ -128,7 +129,7 @@ class build_tagger {
             modelBw.write(tagLine.trim());
             modelBw.newLine();
             
-            // 2nd line of model file is word list
+            // LINE_2 of model file is word list
             String wordLine = "";
             for (int i = 0; i < wordArray.length; i++)
             {
@@ -137,20 +138,35 @@ class build_tagger {
             modelBw.write(wordLine);
             modelBw.newLine();
             
-            // starting from 3rd line: transition matrix
+            // LINE_3 - LINE_47 (45 lines): transition matrix
             for (int i = 0; i < tagArray.length; i++)
             {
                 String tLine = "";
                 for (int j = 0; j < tagArray.length; j++)
                 {
-                    tLine += TMatrix.get(tagArray[i]).get(tagArray[j]) + " ";
+                    Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
+                    tLine += (count == null) ? 0 : count.intValue();
+                    tLine += " ";
                 }
                 modelBw.write(tLine.trim());
                 modelBw.newLine();
             }
             
-            // emission matrix
+            // LINE_48 - LINE_92 (45 lines): emission matrix
+            for (int i = 0; i < tagArray.length; i++)
+            {
+                String eLine = "";
+                for (int j = 0; j < wordArray.length; j++)
+                {
+                    Integer count = EMatrix.get(tagArray[i]).get(wordArray[j]);
+                    eLine += (count == null) ? 0 : count.intValue();
+                    eLine += " ";
+                }
+                modelBw.write(eLine.trim());
+                modelBw.newLine();
+            }
             
+            // close buffer and file
             modelBw.close();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
