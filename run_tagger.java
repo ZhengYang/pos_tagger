@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Stack;
 
 class run_tagger {
     
@@ -85,32 +86,31 @@ class run_tagger {
         // set up a trellis while calculating the forward probabilities
         ArrayList<ArrayList<TrellisNode>> trellis = new ArrayList<ArrayList<TrellisNode>>();
         // keep track the max probability for a column
-        TrellisNode maxNode = null;
+        TrellisNode maxTerminalNode = null;
         for (int i = 0; i < words.length; i++) {
             // set up a column in trellis
             ArrayList<TrellisNode> col = new ArrayList<TrellisNode>();
             for (String tag : tagList) {
                 TrellisNode tNode = new TrellisNode();
                 tNode.tag = tag;
-                tNode.prob = ;
-                tNode.backPtr = ;
-                words[i]
-                col.add(tag);
+                tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, TMatrix);
+                tNode.prob = (i == 0) ? EMatrix.get(tag).get(words[i]) : tNode.backPtr.prob * TMatrix.get(tNode.backPtr.tag).get(tag) * EMatrix.get(tag).get(words[i]);
+                col.add(tNode);
             }
             trellis.add(col);
-            // reset max node is not the last  column
-            if (i != words.length - 1) {
-                maxNode = null;
+            // reset max terminal node is not the last  column
+            if (i == words.length - 1) {
+                maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i - 1), "</s>", TMatrix);
             }
         }
         
         // backtrace from max node
         Stack<String> optimalPathStack = new Stack<String>();
-        TrellisNode currNode = maxNode;
-        while(currNode.backPtr != null) {
+        TrellisNode currNode = maxTerminalNode;
+        while(currNode != null) {
             optimalPathStack.push(currNode.tag);
             currNode = currNode.backPtr;
-        }
+        } 
         // pop stack to constrct the tag list in order
         ArrayList<String> optimalPath = new ArrayList<String>();
         while (!optimalPathStack.empty()) {
@@ -118,5 +118,19 @@ class run_tagger {
         }
 	    
 	    return optimalPath;
+	}
+	
+	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Integer>> TMatrix) {
+	    TrellisNode maxNode = null;
+	    for (TrellisNode node : col) {
+            if (maxNode == null)
+                maxNode = node;
+            else {
+                // assume equal probability won't update max
+                if (maxNode.prob * TMatrix.get(maxNode.tag).get(transToTag) < node.prob * TMatrix.get(node.tag).get(transToTag))
+                    maxNode = node;
+            }
+	    }
+	    return maxNode;
 	}
 }
