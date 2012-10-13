@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Arrays;
 
 class build_tagger {
+    // quick ref: java build_tagger sents.train sents.devt model_file
 	public static void main(String[] args) {
 	    if (args.length != 3) {
 	        System.out.println("error: Wrong number of arguments.");
@@ -136,12 +137,19 @@ class build_tagger {
             modelBw.write(wordLine);
             modelBw.newLine();
             
-            /*
-            for (Entry<String, Map<String, Integer>> entry : EMatrix.entrySet())
-                        {
-                            out.write(entry.getKey() + "/" + entry.getValue());
-                        }
-            */
+            // starting from 3rd line: transition matrix
+            for (int i = 0; i < tagArray.length; i++)
+            {
+                String tLine = "";
+                for (int j = 0; j < tagArray.length; j++)
+                {
+                    tLine += TMatrix.get(tagArray[i]).get(tagArray[j]) + " ";
+                }
+                modelBw.write(tLine.trim());
+                modelBw.newLine();
+            }
+            
+            // emission matrix
             
             modelBw.close();
         } catch (Exception e) {
