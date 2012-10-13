@@ -33,10 +33,10 @@ class run_tagger {
 	static class HMM {
 	    public Set<String> tagSet;
         public Set<String> wordSet;
-	    public ArrayList<String> tagList;
-	    public ArrayList<String> wordList;
-	    public Map<String, Map<String, Integer>> tMatrix;
-        public Map<String, Map<String, Integer>> eMatrix;
+	    public String[] tagArray;
+	    public String[] wordArray;
+	    public Map<String, Map<String, Double>> tMatrix;
+        public Map<String, Map<String, Double>> eMatrix;
 	}
     
     
@@ -59,12 +59,17 @@ class run_tagger {
             FileReader modelReader = new FileReader(modelFile);
             BufferedReader modelBr = new BufferedReader(modelReader);
             
+            
             Set<String> tagSet = new HashSet<String>();
             Set<String> wordSet = new HashSet<String>();
             ArrayList<String> tagList = new ArrayList<String>();
     	    ArrayList<String> wordList = new ArrayList<String>();
-    	    Map<String, Map<String, Integer>> tMatrix = new HashMap<String, Map<String, Integer>>();
-            Map<String, Map<String, Integer>> eMatrix = new HashMap<String, Map<String, Integer>>() ;
+    	    // counts
+    	    Map<String, Map<String, Integer>> TMatrix = new HashMap<String, Map<String, Integer>>();
+            Map<String, Map<String, Integer>> EMatrix = new HashMap<String, Map<String, Integer>>();
+            // probabilities
+            Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
+            Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
             
             String modelLine = "";
             int lineCounter = 1;
@@ -99,7 +104,7 @@ class run_tagger {
                         String currToTag = tagList.get(i);
                         hm.put( currToTag, new Integer(counts[i]));
                     }
-                    tMatrix.put( currTag, hm );
+                    TMatrix.put( currTag, hm );
                 }
                 // LINE_48 - LINE_92: emission matrix
                 else {
@@ -112,9 +117,12 @@ class run_tagger {
                         String currWord = wordList.get(i);
                         hm.put( currWord, new Integer(counts[i]));
                     }
-                    tMatrix.put( currTag, hm );
+                    EMatrix.put( currTag, hm );
                 }
             }
+            
+            String[] tagArray = tagList.toArray(new String[0]);
+            String[] wordArray = wordList.toArray(new String[0]);
             
             // calculate probabilities from counts
             // transition probabilities
@@ -159,8 +167,8 @@ class run_tagger {
             HMM hmm = new HMM();
             hmm.tagSet = tagSet;
             hmm.wordSet = wordSet;
-            hmm.tagList = tagList;
-            hmm.wordList = wordList;
+            hmm.tagArray = tagArray;
+            hmm.wordArray = wordArray;
             hmm.tMatrix = tMatrix;
             hmm.eMatrix = eMatrix;
             // close model buffer
@@ -205,10 +213,10 @@ class run_tagger {
 	//////////////////////////////////////
 	public static ArrayList<String> Vite(String[] words, HMM hmm) {
 	    // retrieve model paramenters
-	    ArrayList<String> tagList = hmm.tagList;
-	    ArrayList<String> wordList = hmm.wordList;
-	    Map<String, Map<String, Integer>> tMatrix = hmm.tMatrix;
-        Map<String, Map<String, Integer>> eMatrix = hmm.eMatrix;
+	    String[] tagArray = hmm.tagArray;
+	    String[] wordArray = hmm.wordArray;
+	    Map<String, Map<String, Double>> tMatrix = hmm.tMatrix;
+        Map<String, Map<String, Double>> eMatrix = hmm.eMatrix;
         
         // set up a trellis while calculating the forward probabilities
         ArrayList<ArrayList<TrellisNode>> trellis = new ArrayList<ArrayList<TrellisNode>>();
@@ -217,7 +225,7 @@ class run_tagger {
         for (int i = 0; i < words.length; i++) {
             // set up a column in trellis
             ArrayList<TrellisNode> col = new ArrayList<TrellisNode>();
-            for (String tag : tagList) {
+            for (String tag : tagArray) {
                 TrellisNode tNode = new TrellisNode();
                 tNode.tag = tag;
                 tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
@@ -252,7 +260,7 @@ class run_tagger {
 	/////////////////////////////////////////////////////////////////////
 	// find the max node that will result in local max (for back tracing)
 	//////////////////////////////////////////////////////////////////////
-	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Integer>> tMatrix) {
+	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Double>> tMatrix) {
 	    TrellisNode maxNode = null;
 	    for (TrellisNode node : col) {
             if (maxNode == null)
