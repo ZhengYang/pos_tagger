@@ -1,4 +1,7 @@
-import java.io.*;
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -9,14 +12,22 @@ import java.util.Stack;
 
 class run_tagger {
     
+    /////////////////////////////////////
     // nested class for viterbi algorithm
+    /////////////////////////////////////
+    
 	static class TrellisNode {
 	    public String tag;
 	    public double prob;
 	    public TrellisNode backPtr;
 	}
 	
+	
+	
+	///////////////////////////////////////
 	// nested class for Hidden Markov Model
+	///////////////////////////////////////
+	
 	static class HMM {
 	    public ArrayList<String> tagList;
 	    public ArrayList<String> wordList;
@@ -24,7 +35,10 @@ class run_tagger {
         public Map<String, Map<String, Integer>> eMatrix;
 	}
     
+    
+    
 	public static void main(String args[]) {
+	    // quick ref: java run_tagger sents.test model_file sents.out
 	    if (args.length != 3) {
 	        System.out.println("error: Wrong number of arguments.");
 	        System.out.println("usage: java run_tagger <sents.test> <model_file> <sents.out>");
@@ -38,19 +52,21 @@ class run_tagger {
         
         try {
             // load HMM
-            FileInputStream modelStream = new FileInputStream(modelFile);
-            DataInputStream modelDataIn = new DataInputStream(modelStream);
-            BufferedReader modelBr = new BufferedReader(new InputStreamReader(modelDataIn));
+            FileReader modelReader = new FileReader(modelFile);
+            BufferedReader modelBr = new BufferedReader(modelReader);
             HMM hmm = new HMM();
             
-             // read input            
-            FileInputStream testStream = new FileInputStream(testFile);
-            DataInputStream testDataIn = new DataInputStream(testStream);
-            BufferedReader testBr = new BufferedReader(new InputStreamReader(testDataIn));
+            // close model buffer
+            modelBr.close();
+            
+            
+             // read test input            
+            FileReader testReader = new FileReader(testFile);
+            BufferedReader testBr = new BufferedReader(testReader);
             
             // prepare output file
-            FileWriter foStream = new FileWriter(outFile);
-            BufferedWriter outBw = new BufferedWriter(foStream);
+            FileWriter outWriter = new FileWriter(outFile);
+            BufferedWriter outBw = new BufferedWriter(outWriter);
             
             // process input and output results from viterbi algorithm
             String currLine;
@@ -64,10 +80,10 @@ class run_tagger {
                 for (int i = 0; i < tokens.length; i++) {
                     outputLine += tokens[i] + "/" + tags.get(i) + " ";
                 }
-                outBw.write(outputLine.trim() + "\n");
+                outBw.write(outputLine.trim());
+                outBw.newLine();
             }
-            
-            modelBr.close();
+            // close input and output buffer
             testBr.close();
             outBw.close();
         } catch (Exception e) {
@@ -75,7 +91,11 @@ class run_tagger {
         }
 	}
 	
+	
+	
+	//////////////////////////////////////
 	// Implementaion of viterbi algorithm
+	//////////////////////////////////////
 	public static ArrayList<String> Vite(String[] words, HMM hmm) {
 	    // retrieve model paramenters
 	    ArrayList<String> tagList = hmm.tagList;
@@ -120,6 +140,11 @@ class run_tagger {
 	    return optimalPath;
 	}
 	
+	
+	
+	/////////////////////////////////////////////////////////////////////
+	// find the max node that will result in local max (for back tracing)
+	//////////////////////////////////////////////////////////////////////
 	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Integer>> TMatrix) {
 	    TrellisNode maxNode = null;
 	    for (TrellisNode node : col) {
