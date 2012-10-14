@@ -68,6 +68,7 @@ class run_tagger {
             // probabilities
             Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
             Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
+            Map<String, Map<String, Double>> uMatrix = new HashMap<String, Map<String, Double>>();
             
             String modelLine = null;
             int lineCounter = 1;
@@ -86,6 +87,15 @@ class run_tagger {
                 else if (lineCounter == 2) {
                     // break each line into an array of "word" tokens
                     String[] words = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < words.length; i++) {
+                        wordList.add(words[i]);
+                        wordSet.add(words[i]);
+                    }
+                }
+                // LINE_3: unknowCatList
+                else if (lineCounter == 3) {
+                    // break each line into an array of "word" tokens
+                    String[] unknownCats = modelLine.trim().split("\\s+");
                     for (int i = 0; i < words.length; i++) {
                         wordList.add(words[i]);
                         wordSet.add(words[i]);
