@@ -1,23 +1,26 @@
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.HashSet;
 
 class diff {
-    // quick ref: java diff sents.ans sents.out model_file
+    // quick ref: java diff sents.ans sents.out model_file report
 	public static void main(String args[]) {
 	    
-	    if (args.length != 3) {
+	    if (args.length != 4) {
 	        System.out.println("error: Wrong number of arguments.");
-	        System.out.println("usage: java diff <sents.ans> <sents.out> <model_file>");
+	        System.out.println("usage: java diff <sents.ans> <sents.out> <model_file> <report>");
 	        System.exit(1);
         }
         // take in params
         String ansFile = args[0];
         String outFile = args[1];
         String modelFile = args[2];
+        String reportFile = args[3];
         
         try {
             // evaluate output against answers
@@ -29,6 +32,9 @@ class diff {
             
             FileReader modelReader = new FileReader(modelFile);
             BufferedReader modelBr = new BufferedReader(modelReader);
+            
+            FileWriter reportWriter = new FileWriter(reportFile);
+            BufferedWriter reportBw = new BufferedWriter(reportWriter);
             
             String modelLine;
             int lineCount = 1;
@@ -71,10 +77,16 @@ class diff {
                         correctCount += 1;
                     }
                     else {
-                        System.out.println( ansTokens[k] + " <=> " + outTokens[k] + " " + oov);
+                        reportBw.write( ansTokens[k] + " <=> " + outTokens[k] + " " + oov );
+                        reportBw.newLine();
                     }
                 }
             }
+            outBr.close();
+            ansBr.close();
+            modelBr.close();
+            reportBw.close();
+            
             double acc = correctCount / (double) totalCount;
             System.out.println("Acc = " + String.format("%.2f", acc * 100) + "%");
         } catch (Exception e) {
