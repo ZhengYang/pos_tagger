@@ -54,10 +54,10 @@ class diff {
             int totalCount = 0;
             while ((outLine = outBr.readLine()) != null) {
                 ansLine = ansBr.readLine();
-                String oov = "";
 	            String[] outTokens = outLine.trim().split("\\s+");
 	            String[] ansTokens = ansLine.trim().split("\\s+");
                 for (int k = 0; k < outTokens.length; k++) {
+                    String oov = "";
                     // for each "word/tag" token, break it by "/"
                     // the last entity will be the tag
                     // everything before the last "/" will be the word
