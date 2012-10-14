@@ -203,7 +203,7 @@ class run_tagger {
                 tNode.word = words[i];
                 tNode.tag = tag;
                 tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
-                // IMPORTANT: handle unknown word
+                // IMPORTANT: handle unknown word (OOV)
                 double eProb;
                 if (!wordSet.contains(words[i])) {
                     eProb = 1;
@@ -224,6 +224,7 @@ class run_tagger {
         // backtrace from max node
         Stack<String> optimalPathStack = new Stack<String>();
         TrellisNode currNode = maxTerminalNode;
+        //System.out.println("Terminal Probability: " + maxTerminalNode.prob);
         while(currNode != null) {
             optimalPathStack.push(currNode.tag);
             currNode = currNode.backPtr;
