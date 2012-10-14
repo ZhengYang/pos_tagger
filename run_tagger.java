@@ -20,6 +20,7 @@ class run_tagger {
     /////////////////////////////////////
     
 	static class TrellisNode {
+	    public String word;
 	    public String tag;
 	    public double prob;
 	    public TrellisNode backPtr;
@@ -234,7 +235,11 @@ class run_tagger {
             // set up a column in trellis
             ArrayList<TrellisNode> col = new ArrayList<TrellisNode>();
             for (String tag : tagArray) {
+                // skip </s>
+                if (tag.equals("</s>")) continue;
+                
                 TrellisNode tNode = new TrellisNode();
+                tNode.word = words[i];
                 tNode.tag = tag;
                 tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
                 // IMPORTANT: handle unknown word
@@ -249,10 +254,9 @@ class run_tagger {
                 col.add(tNode);
             }
             trellis.add(col);
-            
             // reset max terminal node is not the last  column
             if (i == words.length - 1) {
-                maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i - 1), "</s>", tMatrix);
+                maxTerminalNode = nodeWithMaxPrevTimesTran(trellis.get(i), "</s>", tMatrix);
             }
         }
         
@@ -268,7 +272,6 @@ class run_tagger {
         while (!optimalPathStack.empty()) {
             optimalPath.add(optimalPathStack.pop());
         }
-	    
 	    return optimalPath;
 	}
 	
@@ -279,7 +282,6 @@ class run_tagger {
 	//////////////////////////////////////////////////////////////////////
 	public static TrellisNode nodeWithMaxPrevTimesTran(ArrayList<TrellisNode> col, String transToTag, Map<String, Map<String, Double>> tMatrix) {
 	    TrellisNode maxNode = null;
-	    System.out.println("xixi3");
 	    for (TrellisNode node : col) {
             if (maxNode == null)
                 maxNode = node;
