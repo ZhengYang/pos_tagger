@@ -65,9 +65,6 @@ class run_tagger {
             Set<String> wordSet = new HashSet<String>();
             ArrayList<String> tagList = new ArrayList<String>();
     	    ArrayList<String> wordList = new ArrayList<String>();
-    	    // counts
-    	    Map<String, Map<String, Integer>> TMatrix = new HashMap<String, Map<String, Integer>>();
-            Map<String, Map<String, Integer>> EMatrix = new HashMap<String, Map<String, Integer>>();
             // probabilities
             Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
             Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
@@ -99,79 +96,43 @@ class run_tagger {
                     int tagListIndex = lineCounter - 3;
                     String currTag = tagList.get(tagListIndex);
                     
-                    Map<String, Integer> hm = new HashMap<String, Integer>();
+                    Map<String, Double> hm = new HashMap<String, Double>();
                     String[] counts = modelLine.trim().split("\\s+");
+                    int total = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        total += Integer.parseInt(counts[i]);
+                    }
                     for (int i = 0; i < counts.length; i++) {
                         String currToTag = tagList.get(i);
-                        hm.put( currToTag, new Integer(counts[i]));
+                        int currCount = Integer.parseInt(counts[i]);
+                        hm.put( currToTag, new Double(currCount / (double) total));
                     }
-                    TMatrix.put( currTag, hm );
+                    
+                    tMatrix.put( currTag, hm );
                 }
                 // LINE_48 - LINE_92: emission matrix
                 else if (lineCounter >= 48 && lineCounter <= 92){
                     int tagListIndex = lineCounter - 48;
                     String currTag = tagList.get(tagListIndex);
                     
-                    Map<String, Integer> hm = new HashMap<String, Integer>();
+                    Map<String, Double> hm = new HashMap<String, Double>();
                     String[] counts = modelLine.trim().split("\\s+");
+                    int total = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        total += Integer.parseInt(counts[i]);
+                    }
                     for (int i = 0; i < counts.length; i++) {
                         String currWord = wordList.get(i);
-                        hm.put( currWord, new Integer(counts[i]));
+                        int currCount = Integer.parseInt(counts[i]);
+                        hm.put( currWord, new Double(currCount / (double) total));
                     }
-                    EMatrix.put( currTag, hm );
+                    eMatrix.put( currTag, hm );
                 }
                 lineCounter++;
             }
             
             String[] tagArray = tagList.toArray(new String[0]);
             String[] wordArray = wordList.toArray(new String[0]);
-            
-            // calculate probabilities from counts
-            // transition probabilities
-            for (int i = 0; i < tagArray.length; i++) {
-                // skip </s>
-                if (tagArray[i].equals("</s>")) continue;
-                
-                // first loop for calculating the total count
-                int total = 0;
-                for (int j = 0; j < tagArray.length; j++)
-                {   
-                    Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
-                    total += ( (count == null) ? 0 : count.intValue() );
-                }
-                // second loop for calculating probabilities
-                Map<String, Double> hm = new HashMap<String, Double>();
-                for (int j = 0; j < tagArray.length; j++)
-                {
-                    Integer count = TMatrix.get(tagArray[i]).get(tagArray[j]);
-                    double prob = ( (count == null) ? 0 : count.intValue() ) / (double) total;
-                    hm.put( tagArray[j], new Double(prob) );
-                }
-                tMatrix.put( tagArray[i], hm );
-            }
-            
-            // emission probilities
-            for (int i = 0; i < tagArray.length; i++) {
-                // skip </s>
-                if (tagArray[i].equals("</s>")) continue;
-                
-                // first loop for calculating the total count
-                int total = 0;
-                for (int j = 0; j < wordArray.length; j++)
-                {
-                    Integer count = EMatrix.get(tagArray[i]).get(wordArray[j]);
-                    total += (count == null) ? 0 : count.intValue();
-                }
-                // second loop for calculating probabilities
-                Map<String, Double> hm = new HashMap<String, Double>();
-                for (int j = 0; j < wordArray.length; j++)
-                {
-                    Integer count = EMatrix.get(tagArray[i]).get(wordArray[j]);
-                    double prob = ( (count == null) ? 0 : count.intValue() ) / (double) total;
-                    hm.put( wordArray[j], new Double(prob) );
-                }
-                eMatrix.put( tagArray[i], hm );
-            }
             
             HMM hmm = new HMM();
             hmm.tagSet = tagSet;
