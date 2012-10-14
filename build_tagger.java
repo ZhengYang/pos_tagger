@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 class build_tagger {
     // quick ref: java build_tagger sents.train sents.devt model_file
@@ -120,6 +121,9 @@ class build_tagger {
             String[] tagArray = tagSet.toArray(new String[0]);
             String[] wordArray = wordSet.toArray(new String[0]);
             Arrays.sort(tagArray);
+            ArrayList<String> tmpTagList = new ArrayList<String>(Arrays.asList(tagArray));
+            tmpTagList.add("</s>");
+            tagArray = tmpTagList.toArray(new String[0]);
             Arrays.sort(wordArray);
             
             FileWriter modelWriter = new FileWriter(modelFile);
@@ -131,7 +135,7 @@ class build_tagger {
             {
                 tagLine += tagArray[i] + " ";
             }
-            modelBw.write(tagLine.trim() + " </s>");
+            modelBw.write(tagLine.trim());
             modelBw.newLine();
             
             // LINE_2 of model file is word list
