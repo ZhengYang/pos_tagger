@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 class diff {
+    // quick ref: java diff sents.ans sents.out model_file
 	public static void main(String args[]) {
 	    
 	    if (args.length != 3) {
