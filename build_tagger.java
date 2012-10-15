@@ -105,18 +105,64 @@ class build_tagger {
                     tagSet.add(tag);
                     wordSet.add(word);
                     
+                    // cumulate unknown word category count
+                    if (UMatrix.containsKey(tag)) {
+                        for (int j = 3; j < unknownWordCatArray.length; j++) {
+                            if ( word.endsWith(unknownWordCatArray[j]) ) {
+                                int prevCount = UMatrix.get(tag).get(unknownWordCatArray[j]).intValue();
+                                UMatrix.get(tag).put( unknownWordCatArray[j], new Integer( prevCount + 1) );
+                            }
+                        }
+                        if (Character.isUpperCase(word.charAt(0)))
+                            UMatrix.get(tag).put("CAP", new Integer( UMatrix.get(tag).get("CAP").intValue() + 1) );
+                        UMatrix.get(tag).put( "TOTAL", new Integer( UMatrix.get(tag).get("TOTAL").intValue() + 1) );
+                    }
+                    else {
+                        Map<String, Integer> hm = new HashMap<String, Integer>();
+                        // init hm with all posssible categories
+                        for (int j = 3; j < unknownWordCatArray.length; j++) {
+                            if ( word.endsWith(unknownWordCatArray[j]) ) {
+                                hm.put( unknownWordCatArray[j], new Integer(1) );
+                            }
+                            else
+                                hm.put( unknownWordCatArray[j], new Integer(0) );
+                        }
+                        // then handle current word
+                        hm.put( "TOTAL", new Integer(1) );
+                        hm.put( "ONE-COUNT", new Integer(0) );
+                        if (Character.isUpperCase(word.charAt(0)))
+                            hm.put("CAP", new Integer(1));
+                        else
+                            hm.put("CAP", new Integer(0));
+                        UMatrix.put( tag, hm );
+                    }
+                    
                     // cumulate emission count
                     if (EMatrix.containsKey(tag)) {
+                        int oneCount = UMatrix.get(tag).get("ONE-COUNT").intValue();
                         if (EMatrix.get(tag).containsKey(word)) {
-                            EMatrix.get(tag).put( word, new Integer(EMatrix.get(tag).get(word).intValue() + 1) );
+                            int eCount = EMatrix.get(tag).get(word).intValue();
+                            // update emission count
+                            EMatrix.get(tag).put( word, new Integer(eCount + 1) );
+                            // update one-count
+                            if (eCount == 1) {
+                                UMatrix.get(tag).put( "ONE-COUNT", new Integer( oneCount - 1) );
+                            }
                         }
                         else {
+                            // update emission count
                             EMatrix.get(tag).put( word, new Integer(1) );
+                            // update one-count
+                            UMatrix.get(tag).put( "ONE-COUNT", new Integer( oneCount + 1) );
                         }
                     }
                     else {
                         Map<String, Integer> hm = new HashMap<String, Integer>();
                         hm.put( word, new Integer(1) );
+                        // update one-count
+                        int oneCount = UMatrix.get(tag).get("ONE-COUNT").intValue();
+                        UMatrix.get(tag).put( "ONE-COUNT", new Integer( oneCount + 1) );
+                        
                         EMatrix.put( tag, hm );
                     }
                     
@@ -133,46 +179,6 @@ class build_tagger {
                         Map<String, Integer> hm = new HashMap<String, Integer>();
                         hm.put( tag, new Integer(1) );
                         TMatrix.put( prevTag, hm );
-                    }
-                    
-                    // cumulate unknown word category count
-                    if (UMatrix.containsKey(tag)) {
-                        for (int j = 3; j < unknownWordCatArray.length; j++) {
-                            if ( word.endsWith(unknownWordCatArray[j]) ) {
-                                int prevCount = UMatrix.get(tag).get(unknownWordCatArray[j]).intValue();
-                                int oneCount = UMatrix.get(tag).get("ONE-COUNT").intValue();
-                                UMatrix.get(tag).put( unknownWordCatArray[j], new Integer( prevCount + 1) );
-                                if (prevCount == 1) {
-                                    // curr count > 1 => one-count will minus 1
-                                    UMatrix.get(tag).put( "ONE-COUNT", new Integer( oneCount - 1) );
-                                } else if (prevCount == 0) {
-                                    UMatrix.get(tag).put( "ONE-COUNT", new Integer( oneCount + 1) );
-                                }
-                                break;
-                            }
-                        }
-                        if (Character.isUpperCase(word.charAt(0)))
-                            UMatrix.get(tag).put("CAP", new Integer( UMatrix.get(tag).get("CAP").intValue() + 1) );
-                        UMatrix.get(tag).put( "TOTAL", new Integer(UMatrix.get(tag).get("TOTAL").intValue() + 1) );
-                    }
-                    else {
-                        Map<String, Integer> hm = new HashMap<String, Integer>();
-                        // init hm with all posssible categories
-                        boolean foundLongestSuffix = false;
-                        for (int j = 0; j < unknownWordCatArray.length; j++) {
-                            if ( j > 2 && !foundLongestSuffix && word.endsWith(unknownWordCatArray[j]) ) {
-                                hm.put( unknownWordCatArray[j], new Integer(1) );
-                                foundLongestSuffix = true;
-                            }
-                            else
-                                hm.put( unknownWordCatArray[j], new Integer(0) );
-                        }
-                        // then handle current word
-                        hm.put( "TOTAL", new Integer(1) );
-                        hm.put( "ONE-COUNT", new Integer(1) );
-                        if (Character.isUpperCase(word.charAt(0)))
-                            hm.put("CAP", new Integer(1));
-                        UMatrix.put( tag, hm );
                     }
                     
                     prevTag = tag;
@@ -285,8 +291,8 @@ class build_tagger {
                 String uLine = "";
                 for (int j = 0; j < unknownWordCatArray.length; j++)
                 {
-                    Integer count = UMatrix.get(tagArray[i]).get(unknownWordCatArray[j]);
-                    uLine += (count == null) ? 0 : count.intValue();
+                    int count = UMatrix.get(tagArray[i]).get(unknownWordCatArray[j]).intValue();
+                    uLine += count;
                     uLine += " ";
                 }
                 modelBw.write(uLine.trim());

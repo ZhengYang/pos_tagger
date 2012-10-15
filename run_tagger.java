@@ -37,8 +37,10 @@ class run_tagger {
         public Set<String> wordSet;
 	    public String[] tagArray;
 	    public String[] wordArray;
+	    public String[] unknownWordCatArray;
 	    public Map<String, Map<String, Double>> tMatrix;
         public Map<String, Map<String, Double>> eMatrix;
+        public Map<String, Map<String, Double>> uMatrix;
 	}
     
     
@@ -65,6 +67,7 @@ class run_tagger {
             Set<String> wordSet = new HashSet<String>();
             ArrayList<String> tagList = new ArrayList<String>();
     	    ArrayList<String> wordList = new ArrayList<String>();
+    	    ArrayList<String> unknownWordCatList = new ArrayList<String>();
             // probabilities
             Map<String, Map<String, Double>> tMatrix = new HashMap<String, Map<String, Double>>();
             Map<String, Map<String, Double>> eMatrix = new HashMap<String, Map<String, Double>>();
@@ -94,16 +97,15 @@ class run_tagger {
                 }
                 // LINE_3: unknowCatList
                 else if (lineCounter == 3) {
-                    // break each line into an array of "word" tokens
-                    String[] unknownCats = modelLine.trim().split("\\s+");
-                    for (int i = 0; i < words.length; i++) {
-                        wordList.add(words[i]);
-                        wordSet.add(words[i]);
+                    // break each line into an array of "unknown-cat" tokens
+                    String[] unknownWordCats = modelLine.trim().split("\\s+");
+                    for (int i = 0; i < unknownWordCats.length; i++) {
+                        unknownWordCatList.add(unknownWordCats[i]);
                     }
                 }
-                // LINE_3 - LINE47: transition matrix
-                else if (lineCounter >= 3 && lineCounter <= 47) {
-                    int tagListIndex = lineCounter - 3;
+                // LINE_4 - LINE48: transition matrix
+                else if (lineCounter >= 4 && lineCounter <= 48) {
+                    int tagListIndex = lineCounter - 4;
                     String currTag = tagList.get(tagListIndex);
                     
                     Map<String, Double> hm = new HashMap<String, Double>();
@@ -120,9 +122,9 @@ class run_tagger {
                     
                     tMatrix.put( currTag, hm );
                 }
-                // LINE_48 - LINE_92: emission matrix
-                else if (lineCounter >= 48 && lineCounter <= 92){
-                    int tagListIndex = lineCounter - 48;
+                // LINE_49 - LINE_93: emission matrix
+                else if (lineCounter >= 49 && lineCounter <= 93){
+                    int tagListIndex = lineCounter - 49;
                     String currTag = tagList.get(tagListIndex);
                     
                     Map<String, Double> hm = new HashMap<String, Double>();
@@ -138,19 +140,43 @@ class run_tagger {
                     }
                     eMatrix.put( currTag, hm );
                 }
+                
+                // LINE_94 - LINE_138: unknown word model matrix
+                else if (lineCounter >= 94 && lineCounter <= 138){
+                    int tagListIndex = lineCounter - 94;
+                    String currTag = tagList.get(tagListIndex);
+                    
+                    Map<String, Double> hm = new HashMap<String, Double>();
+                    String[] counts = modelLine.trim().split("\\s+");
+                    int total = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        // total counts
+                        if (i == 0)
+                            total = Integer.parseInt(counts[i]);
+                        else {
+                            String currCat = unknownWordCatList.get(i);
+                            int currCount = Integer.parseInt(counts[i]);
+                            hm.put( currCat, new Double(currCount / (double) total));
+                        }
+                    }
+                    uMatrix.put( currTag, hm );
+                }
                 lineCounter++;
             }
             
             String[] tagArray = tagList.toArray(new String[0]);
             String[] wordArray = wordList.toArray(new String[0]);
+            String[] unknownWordCatArray = unknownWordCatList.toArray(new String[0]);
             
             HMM hmm = new HMM();
             hmm.tagSet = tagSet;
             hmm.wordSet = wordSet;
+            hmm.unknownWordCatArray = unknownWordCatArray;
             hmm.tagArray = tagArray;
             hmm.wordArray = wordArray;
             hmm.tMatrix = tMatrix;
             hmm.eMatrix = eMatrix;
+            hmm.uMatrix = uMatrix;
             // close model buffer
             modelBr.close();
             
@@ -194,9 +220,11 @@ class run_tagger {
 	    // retrieve model paramenters
 	    String[] tagArray = hmm.tagArray;
 	    String[] wordArray = hmm.wordArray;
+	    String[] unknownWordCatArray = hmm.unknownWordCatArray;
 	    Set<String> wordSet = hmm.wordSet;
 	    Map<String, Map<String, Double>> tMatrix = hmm.tMatrix;
         Map<String, Map<String, Double>> eMatrix = hmm.eMatrix;
+        Map<String, Map<String, Double>> uMatrix = hmm.uMatrix;
         
         // set up a trellis while calculating the forward probabilities
         ArrayList<ArrayList<TrellisNode>> trellis = new ArrayList<ArrayList<TrellisNode>>();
@@ -205,22 +233,33 @@ class run_tagger {
         for (int i = 0; i < words.length; i++) {
             // set up a column in trellis
             ArrayList<TrellisNode> col = new ArrayList<TrellisNode>();
+            
             for (String tag : tagArray) {
                 // skip </s>
                 if (tag.equals("</s>")) continue;
                 
-                TrellisNode tNode = new TrellisNode();
-                tNode.word = words[i];
-                tNode.tag = tag;
-                tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
-                // IMPORTANT: handle unknown word (OOV)
                 double eProb;
+                // IMPORTANT: handle unknown word (OOV)
                 if (!wordSet.contains(words[i])) {
-                    eProb = 1;
+                    double suffixProb = 1;
+                    for (int j = 3; j < unknownWordCatArray.length; j++) {
+                        if (words[i].endsWith(unknownWordCatArray[j])) {
+                            suffixProb += uMatrix.get(tag).get(unknownWordCatArray[j]).doubleValue();
+                        }
+                    }
+                    double capProb = 1 + uMatrix.get(tag).get(unknownWordCatArray[2]).doubleValue();
+                    if (!Character.isUpperCase(words[i].charAt(0)))
+                        capProb = 1 + 2 - capProb;
+                    double oneCountProb = 1 + uMatrix.get(tag).get(unknownWordCatArray[1]).doubleValue();    
+                    eProb = oneCountProb * capProb * suffixProb;
                 }
                 else {
                     eProb = eMatrix.get(tag).get(words[i]).doubleValue();
                 }
+                TrellisNode tNode = new TrellisNode();
+                tNode.word = words[i];
+                tNode.tag = tag;
+                tNode.backPtr = (i == 0) ? null : nodeWithMaxPrevTimesTran(trellis.get(i - 1), tNode.tag, tMatrix);
                 tNode.prob = (i == 0) ? eProb : tNode.backPtr.prob * tMatrix.get(tNode.backPtr.tag).get(tag).doubleValue() * eProb;
                 col.add(tNode);
             }
