@@ -110,6 +110,20 @@ class run_tagger {
                     
                     Map<String, Double> hm = new HashMap<String, Double>();
                     String[] counts = modelLine.trim().split("\\s+");
+                    /*
+                    // no smoothing
+                    int total = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        total += Integer.parseInt(counts[i]);
+                    }
+                    for (int i = 0; i < counts.length; i++) {
+                        String currToTag = tagList.get(i);
+                        int currCount = Integer.parseInt(counts[i]);
+                        hm.put( currToTag, new Double(currCount / (double) total));
+                    }
+                    */
+                    /*
+                    // add one smoothing
                     int total = 0 + 45;
                     for (int i = 0; i < counts.length; i++) {
                         total += Integer.parseInt(counts[i]);
@@ -118,6 +132,26 @@ class run_tagger {
                         String currToTag = tagList.get(i);
                         int currCount = Integer.parseInt(counts[i]) + 1;
                         hm.put( currToTag, new Double(currCount / (double) total));
+                    }
+                    */
+                    // witten-bell smoothing
+                    int total = 0;
+                    int seenTypes = 0;
+                    int unseenTypes = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        total += Integer.parseInt(counts[i]);
+                        if (Integer.parseInt(counts[i]) == 0)
+                            unseenTypes += 1;
+                        else
+                            seenTypes += 1;
+                    }
+                    for (int i = 0; i < counts.length; i++) {
+                        String currToTag = tagList.get(i);
+                        int currCount = Integer.parseInt(counts[i]);
+                        if (currCount != 0)
+                            hm.put( currToTag, new Double(currCount / ((double) total + seenTypes)));
+                        else
+                            hm.put( currToTag, new Double(seenTypes / ((double) unseenTypes * (total + seenTypes))));
                     }
                     
                     tMatrix.put( currTag, hm );
