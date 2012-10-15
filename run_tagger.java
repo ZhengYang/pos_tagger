@@ -153,7 +153,27 @@ class run_tagger {
                         else
                             hm.put( currToTag, new Double(seenTypes / ((double) unseenTypes * (total + seenTypes))));
                     }
-                    
+                    /*
+                    // Kneser-Ney smoothing
+                    int total = 0;
+                    int seenTypes = 0;
+                    int unseenTypes = 0;
+                    for (int i = 0; i < counts.length; i++) {
+                        total += Integer.parseInt(counts[i]);
+                        if (Integer.parseInt(counts[i]) == 0)
+                            unseenTypes += 1;
+                        else
+                            seenTypes += 1;
+                    }
+                    for (int i = 0; i < counts.length; i++) {
+                        String currToTag = tagList.get(i);
+                        int currCount = Integer.parseInt(counts[i]);
+                        if (currCount != 0)
+                            hm.put( currToTag, new Double((currCount - 1) / (double) total));
+                        else
+                            hm.put( currToTag, new Double(seenTypes / ((double) unseenTypes + seenTypes)) * 0.5);
+                    }
+                    */
                     tMatrix.put( currTag, hm );
                 }
                 // LINE_49 - LINE_93: emission matrix
