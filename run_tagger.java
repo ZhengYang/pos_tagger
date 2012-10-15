@@ -110,13 +110,13 @@ class run_tagger {
                     
                     Map<String, Double> hm = new HashMap<String, Double>();
                     String[] counts = modelLine.trim().split("\\s+");
-                    int total = 0;
+                    int total = 0 + 45;
                     for (int i = 0; i < counts.length; i++) {
                         total += Integer.parseInt(counts[i]);
                     }
                     for (int i = 0; i < counts.length; i++) {
                         String currToTag = tagList.get(i);
-                        int currCount = Integer.parseInt(counts[i]);
+                        int currCount = Integer.parseInt(counts[i]) + 1;
                         hm.put( currToTag, new Double(currCount / (double) total));
                     }
                     
